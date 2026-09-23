@@ -5,10 +5,12 @@
 <title>Cache Valley Keys ASAP | Mobile Auto Locksmith — Logan &amp; Cache Valley, UT</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="Locked out, need a duplicate key, or lost every key to your car? Cache Valley Keys ASAP comes to you anywhere in Logan and Cache Valley, UT. Call now." />
+<meta name="theme-color" content="#0f1012" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<!-- Fonts load without blocking first paint (system font shows instantly on slow connections) -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" /></noscript>
 <style>
   :root{
     --bg:#0f1012;
@@ -21,13 +23,18 @@
     --accent-bright:#e6b95c;
     --radius:2px;
     --cut:14px; /* corner-cut size for angular buttons/panels */
+    --hmax:78px;  /* header height at top of page */
+    --hmin:56px;  /* header height once scrolled */
+    --kh:clamp(22px,2.9vw,40px); /* visible half-width of the key blade */
   }
+  @media (max-width:720px){:root{--hmax:66px;--hmin:52px;}}
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth;scroll-padding-top:calc(var(--hmin) + var(--kh) + 24px);}
   body{
     margin:0;background:var(--bg);color:var(--text);
     font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     line-height:1.55;-webkit-font-smoothing:antialiased;
+    padding-top:calc(var(--hmax) + 4px + var(--kh)*1.2);
   }
   h1,h2,h3,.brand,.headline{font-family:'Barlow Condensed','Oswald',Impact,sans-serif;text-transform:uppercase;letter-spacing:0.01em;}
   a{color:inherit;}
@@ -42,30 +49,37 @@
   /* top accent line */
   .top-rule{height:3px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 40%,transparent 40%,transparent 60%,var(--accent) 60%);}
 
-  header{position:sticky;top:0;z-index:50;background:rgba(15,16,18,0.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
-  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 24px;max-width:1160px;margin:0 auto;}
-  .brand-mark{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  /* ===== Header: fixed, shrinks on scroll (--hs: 0 → 1). Key blade is tucked half under its bottom edge. ===== */
+  header{--hs:0;position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(15,16,18,0.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 24px;max-width:1160px;margin:0 auto;
+    height:calc(var(--hmax) - (var(--hmax) - var(--hmin))*var(--hs));}
+  .brand-mark{display:flex;align-items:center;gap:10px;text-decoration:none;transform-origin:left center;
+    transform:translateY(calc(6px*var(--hs))) scale(calc(1 - .17*var(--hs)));}
   .brand-mark svg{width:30px;height:30px;flex-shrink:0;}
   .brand-text{font-weight:700;font-size:19px;line-height:1;letter-spacing:0.02em;}
-  .brand-text small{display:block;font-family:'Inter',sans-serif;text-transform:none;font-weight:500;font-size:10.5px;letter-spacing:0.08em;color:var(--text-dim);margin-top:3px;}
+  .brand-text small{display:block;font-family:'Inter',sans-serif;text-transform:none;font-weight:500;font-size:10.5px;letter-spacing:0.08em;color:var(--text-dim);margin-top:3px;opacity:calc(1 - 1.8*var(--hs));}
   nav{display:flex;align-items:center;gap:26px;}
   nav a.navlink{font-size:13px;color:var(--text-dim);text-decoration:none;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;}
   nav a.navlink:hover{color:var(--text);}
   .call-btn{
     display:flex;align-items:center;gap:9px;background:var(--accent);color:#161200;
     font-weight:700;font-size:14px;padding:11px 20px;text-decoration:none;white-space:nowrap;
-    border:none;
+    border:none;transform-origin:right center;transform:scale(calc(1 - .1*var(--hs)));
   }
   .call-btn:hover{background:var(--accent-bright);}
   .call-btn svg{width:16px;height:16px;}
 
+  .key-rail{position:absolute;left:0;top:calc(100% + 1px);width:calc(var(--kh)*9);height:calc(var(--kh)*1.62);
+    pointer-events:none;transform:translateX(-102%);transition:transform 1.2s cubic-bezier(.16,.84,.24,1);}
+  .key-rail.in{transform:none;}
+  #chips{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:49;}
+  @media (prefers-reduced-motion:reduce){.key-rail{transform:none;transition:none;}}
+
   /* Hero */
-  .hero{position:relative;overflow:hidden;padding:100px 0 90px;border-bottom:1px solid var(--line);}
-  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;align-items:center;gap:40px;}
-  @media (max-width:860px){.hero-grid{grid-template-columns:1fr;}}
-  .hero-art{position:relative;height:100%;min-height:340px;display:flex;align-items:center;justify-content:center;}
-  .hero-art svg{width:110%;max-width:520px;opacity:0.9;}
-  @media (max-width:860px){.hero-art{order:-1;min-height:200px;} .hero-art svg{max-width:280px;}}
+  .hero{position:relative;overflow:hidden;padding:72px 0 88px;border-bottom:1px solid var(--line);}
+  .hero:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 70% at 12% 0%,rgba(201,160,74,0.07),transparent 70%);}
+  .hero-copy{position:relative;max-width:760px;}
+  @media (max-width:860px){.hero{padding:30px 0 60px;}}
   .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:18px;}
   .eyebrow .dot{width:6px;height:6px;background:var(--accent);}
   .hero h1{font-size:clamp(34px,5.2vw,58px);font-weight:800;line-height:1.02;margin:0 0 22px;}
@@ -98,30 +112,6 @@
   .svc-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--text-dim);letter-spacing:0.08em;transition:color .3s;}
   .svc-row.cut-done{border-color:var(--accent);}
   .svc-row.cut-done .svc-num{color:var(--accent);}
-
-  /* ===== Scroll-driven 3D key (hero + services) ===== */
-  .keyscroll{position:relative;}
-  .key-stage{position:sticky;top:0;height:100vh;margin-bottom:-100vh;z-index:0;pointer-events:none;}
-  .key-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 38% 50% at 73% 52%,rgba(201,160,74,0.075),transparent 70%);}
-  .key-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
-  .keyscroll > section{position:relative;z-index:1;}
-  #services{padding-bottom:26vh;}
-  @media (min-width:861px){.keyscroll .svc-list{max-width:54%;}}
-  .key-hud{position:absolute;right:32px;bottom:32px;font:500 11px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;text-align:right;font-variant-numeric:tabular-nums;}
-  .key-hud b{color:var(--accent);font-weight:600;}
-  .key-hud .bar{width:190px;height:2px;background:var(--line);margin:10px 0 0 auto;}
-  .key-hud .bar i{display:block;height:100%;width:0;background:var(--accent);}
-  .hero-art .fallback{display:none;}
-  .no-webgl .hero-art .fallback{display:block;}
-  .no-webgl .key-stage{display:none;}
-  @media (max-width:860px){
-    .key-stage{top:61px;height:36vh;margin-bottom:0;z-index:5;background:linear-gradient(var(--bg) 84%,rgba(15,16,18,0));}
-    .key-stage:before{background:radial-gradient(ellipse 60% 55% at 50% 50%,rgba(201,160,74,0.08),transparent 70%);}
-    .key-hud{display:none;}
-    .hero{padding-top:28px;}
-    .hero-art{display:none;}
-    .no-webgl .hero-art{display:flex;}
-  }
 
   /* Why — split band */
   .why-band{background:var(--bg-elev);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
@@ -176,7 +166,7 @@
   .field input,.field select,.field textarea{width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--text);padding:12px 14px;font-family:'Inter',sans-serif;font-size:14px;}
   .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);}
   .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #pinMap{height:200px;margin-top:8px;border:1px solid var(--line);}
+  #pinMap{height:200px;margin-top:8px;border:1px solid var(--line);background:var(--bg-elev-2);}
   .locate-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;margin-bottom:8px;text-decoration:underline;}
   .submit-row{margin-top:24px;}
   .submit-row .btn-primary-lg{width:100%;justify-content:center;}
@@ -186,7 +176,7 @@
   .confirm-check{width:52px;height:52px;background:rgba(201,160,74,0.14);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--accent);font-size:26px;}
   .eta-badge{display:inline-block;background:var(--bg-elev-2);border:1px solid var(--line);padding:10px 20px;margin:16px 0;font-weight:600;font-family:'Inter',sans-serif;}
 
-  /* ===== CTA lock animation overlay ===== */
+  /* ===== CTA lock animation overlay (3D engine loads in the background only on good connections) ===== */
   .lock-overlay{position:fixed;inset:0;z-index:95;background:radial-gradient(ellipse 60% 55% at 50% 50%,rgba(28,22,11,.97),rgba(6,7,8,.99));opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s;cursor:pointer;}
   .lock-overlay.show{opacity:1;visibility:visible;}
   .lock-overlay canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
@@ -194,14 +184,12 @@
   .lock-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,40px);text-transform:uppercase;letter-spacing:.02em;}
   .lock-sub{font:500 11px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-top:6px;}
   .lock-skip{position:absolute;top:22px;right:26px;font-size:11px;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;}
-  .no-webgl .lock-overlay{display:none;}
 </style>
 </head>
 <body>
 
-<div class="top-rule"></div>
-
 <header>
+  <div class="top-rule"></div>
   <div class="header-inner">
     <a class="brand-mark" href="#top">
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -222,22 +210,14 @@
       </a>
     </nav>
   </div>
+  <!-- Double-sided car key: only the lower half of the blade shows; the header hides the rest. Cut on scroll. -->
+  <canvas class="key-rail" id="keyRail" aria-hidden="true"></canvas>
 </header>
-
-<div class="keyscroll" id="keyScroll">
-  <!-- Scroll-driven 3D key: blank at top, fully cut by the last service row -->
-  <div class="key-stage" id="keyStage" aria-hidden="true">
-    <canvas id="keyCanvas"></canvas>
-    <div class="key-hud">
-      <div id="hudLine1">Blank &middot; Uncut</div>
-      <div id="hudLine2">Bitting <b>00</b> / 06</div>
-      <div class="bar"><i id="hudBar"></i></div>
-    </div>
-  </div>
+<canvas id="chips" aria-hidden="true"></canvas>
 
 <section class="hero" id="top">
-  <div class="container hero-grid">
-    <div>
+  <div class="container">
+    <div class="hero-copy">
       <span class="eyebrow"><span class="dot"></span> Cache Valley, UT &mdash; Answered Live</span>
       <h1>Locked out?<br/>I'll come to you.</h1>
       <ul class="hero-list">
@@ -253,17 +233,6 @@
         </a>
         <button class="link-secondary" onclick="openDispatch()">Can't talk right now? Send your details &rarr;</button>
       </div>
-    </div>
-    <div class="hero-art">
-      <!-- Fallback only (shown if WebGL is unavailable) -->
-      <svg class="fallback" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="120" cy="150" r="70" stroke="var(--accent)" stroke-width="2" opacity="0.55"/>
-        <circle cx="120" cy="150" r="18" stroke="var(--accent)" stroke-width="2" opacity="0.55"/>
-        <path d="M190 150H380" stroke="var(--accent)" stroke-width="2" opacity="0.55"/>
-        <path d="M280 150V195" stroke="var(--accent)" stroke-width="2" opacity="0.55"/>
-        <path d="M330 150V180" stroke="var(--accent)" stroke-width="2" opacity="0.55"/>
-        <path d="M240 150V172" stroke="var(--accent)" stroke-width="2" opacity="0.55"/>
-      </svg>
     </div>
   </div>
 </section>
@@ -298,7 +267,6 @@
     </div>
   </div>
 </section>
-</div><!-- /.keyscroll -->
 
 <div class="why-band" id="why">
   <div class="why-split">
@@ -448,7 +416,6 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
   /* ============================================================
      EDIT THIS BLOCK to configure the site — nothing else to touch.
@@ -473,28 +440,44 @@
   document.getElementById('footerCall').textContent = CONFIG.phoneDisplay;
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  let map, marker;
+  /* Map library only downloads when someone opens the form (keeps first load light). */
+  let map, marker, pinned = null, leafletP = null;
+  const LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min';
+  function loadLeaflet(){
+    if(window.L) return Promise.resolve();
+    if(!leafletP) leafletP = new Promise((res, rej)=>{
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = LEAFLET + '.css'; document.head.appendChild(css);
+      const s = document.createElement('script'); s.src = LEAFLET + '.js'; s.onload = res;
+      s.onerror = ()=>{ leafletP = null; rej(); }; document.head.appendChild(s);
+    });
+    return leafletP;
+  }
   function openDispatch(){ if(window.playLock) window.playLock('send',openDispatchNow); else openDispatchNow(); }
   function openDispatchNow(){
     document.getElementById('dispatchBackdrop').classList.add('open');
     document.getElementById('formWrap').style.display = 'block';
     document.getElementById('confirmWrap').style.display = 'none';
-    setTimeout(initMap, 50);
+    loadLeaflet().then(()=>setTimeout(initMap, 50)).catch(()=>{
+      if(!map) document.getElementById('pinMap').innerHTML = '<p class="form-note" style="padding:14px;margin:0">Map couldn’t load on this connection. Tap “Use my current location” above, or describe where you are in Notes.</p>';
+    });
   }
   function closeDispatch(){ document.getElementById('dispatchBackdrop').classList.remove('open'); }
   document.getElementById('dispatchBackdrop').addEventListener('click', (e)=>{ if(e.target.id === 'dispatchBackdrop') closeDispatch(); });
 
   function initMap(){
     if(map){ map.invalidateSize(); return; }
-    map = L.map('pinMap', {zoomControl:false}).setView([CONFIG.baseLat, CONFIG.baseLng], 12);
+    const el = document.getElementById('pinMap'); el.innerHTML = '';
+    const start = pinned ? [pinned.lat, pinned.lng] : [CONFIG.baseLat, CONFIG.baseLng];
+    map = L.map(el, {zoomControl:false}).setView(start, pinned ? 15 : 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-    marker = L.marker([CONFIG.baseLat, CONFIG.baseLng], {draggable:true}).addTo(map);
+    marker = L.marker(start, {draggable:true}).addTo(map);
   }
   function useMyLocation(){
     if(!navigator.geolocation){ alert('Location not available — drag the pin instead.'); return; }
     navigator.geolocation.getCurrentPosition((pos)=>{
-      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
-      marker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+      pinned = {lat:pos.coords.latitude, lng:pos.coords.longitude};
+      if(map){ map.setView([pinned.lat, pinned.lng], 15); marker.setLatLng([pinned.lat, pinned.lng]); }
+      document.querySelector('.locate-btn').innerHTML = '&#10003; Location captured';
     }, ()=>{ alert('Could not get your location — drag the pin instead.'); });
   }
 
@@ -515,11 +498,11 @@
     e.preventDefault();
     const btn=document.getElementById('submitBtn'), errorEl=document.getElementById('formError');
     errorEl.style.display='none'; btn.disabled=true; btn.textContent='Sending...';
-    const form=e.target, pos=marker.getLatLng();
+    const form=e.target, pos = marker ? marker.getLatLng() : pinned;
     const payload={
       name:form.name.value, phone:form.phone.value, year:form.year.value, makeModel:form.makeModel.value,
       issue:form.issue.value, notes:form.notes.value,
-      location: `https://www.google.com/maps?q=${pos.lat},${pos.lng}`
+      location: pos ? `https://www.google.com/maps?q=${pos.lat},${pos.lng}` : 'Not pinned (map unavailable) — see notes'
     };
     try{
       const res = await fetch(CONFIG.formspreeEndpoint, {
@@ -528,8 +511,9 @@
         body: JSON.stringify(payload)
       });
       if(!res.ok) throw new Error('bad response');
-      const miles = distMiles(CONFIG.baseLat, CONFIG.baseLng, pos.lat, pos.lng);
-      document.getElementById('etaBadge').textContent = 'Estimated drive time: ' + etaLabel(miles);
+      document.getElementById('etaBadge').textContent = pos
+        ? 'Estimated drive time: ' + etaLabel(distMiles(CONFIG.baseLat, CONFIG.baseLng, pos.lat, pos.lng))
+        : "I'll confirm your arrival time by phone";
       document.getElementById('formWrap').style.display='none';
       document.getElementById('confirmWrap').style.display='block';
     }catch(err){
@@ -540,25 +524,254 @@
   });
 </script>
 
-<!-- ===== 3D key blade + cutaway lock (three.js r128) ===== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- ===== 2D key blade: pure canvas, no libraries. Per-pixel studio lighting; shavings share the same light. ===== -->
 <script>
 (function(){
-  if(!window.THREE){ document.documentElement.classList.add('no-webgl'); return; }
+  const rail=document.getElementById('keyRail'), oc=document.getElementById('chips'), hdr=document.querySelector('header');
+  if(!rail.getContext) return;
+  const kc=rail.getContext('2d'), ox=oc.getContext('2d');
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v, TAU=Math.PI*2;
+  const sst=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+  const rows=[...document.querySelectorAll('#services .svc-row')];
+  let seed=11; const rnd=()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  const nrm=(x,y,z)=>{const l=Math.hypot(x,y,z);return[x/l,y/l,z/l];};
+
+  /* ---- one studio lighting model shared by key + chips (x right, y down, z toward viewer) ---- */
+  const SB=nrm(-.28,-.6,.75), RS=nrm(.62,-.18,.76);
+  function env(x,y,z){
+    let d1=x*SB[0]+y*SB[1]+z*SB[2], d2=x*RS[0]+y*RS[1]+z*RS[2];
+    return .03+.3*sst(.35,-.7,y)+1.7*Math.exp((d1-1)*22)+.75*Math.exp((d2-1)*60)+.1*Math.exp(-Math.pow((y-.18)/.05,2))+.2*sst(.1,.85,y);
+  }
+  const LUT=new Uint8ClampedArray(1024); for(let i=0;i<1024;i++) LUT[i]=255*Math.pow(i/1023,1/2.2);
+  const tone=c=>LUT[(1-Math.exp(-c*1.3))*1023|0];
+  const NICKEL=[.86,.85,.82], BRASS=[.95,.7,.36], PLASTIC=[.011,.011,.012];
+  function metal(nx,ny,nz,al){ if(nz<0){nx=-nx;ny=-ny;nz=-nz;} const e=env(2*nz*nx,2*nz*ny,2*nz*nz-1);
+    return 'rgb('+tone(al[0]*e)+','+tone(al[1]*e)+','+tone(al[2]*e)+')'; }
+
+  /* ---- 10-space double-sided bitting (mirrored on the hidden edge), 90° cutter, MACS 2 ---- */
+  const BIT=[2,3,1,2,4,3,1,2,4,2], N=BIT.length, DEP=[0,.1,.19,.28,.37], OVL=1.6;
+  const prog=new Float32Array(N), acc=new Float32Array(N), rolled=new Uint8Array(N), cur=new Array(N).fill(null);
+  let hw=30, dpr=1, od=1, G=null, P=0, target=0, sEnd=1, hsPrev=-1, vw=0, vh=0, box=null;
+  let img, HB, AL, E, CA, RR, CUT, BRN;
+
+  function sizeAll(){
+    dpr=Math.min(devicePixelRatio||1,2);
+    const W=Math.round(rail.clientWidth*dpr), H=Math.round(rail.clientHeight*dpr);
+    if(!G||W!==rail.width||H!==rail.height){
+      rail.width=W; rail.height=H; hw=rail.clientHeight/1.62;
+      const xS0=.7*hw, xS1=xS0+.3*hw, xT0=xS1+6.3*hw;
+      G={xS0,xS1,xT0,xTip:xS1+7.4*hw,tipH:.16*hw,f:.14*hw,k:1,pk:.035*hw,g0:.22*hw,g1:.42*hw,gw:.045*hw,gd:.06*hw,
+         C:BIT.map((_,i)=>xS1+(.55+.56*i)*hw),D:BIT.map(b=>DEP[b]*hw)};
+      img=kc.createImageData(W,H); HB=new Float32Array(W*H); AL=new Float32Array(W*H);
+      E=new Float32Array(W); CA=new Float32Array(W); RR=new Float32Array(W); CUT=new Uint8Array(W); BRN=new Float32Array(H);
+      seed=11; let v=0; for(let r=0;r<H;r++){v=v*.6+(rnd()-.5)*.5;BRN[r]=v*.05+(rnd()<.02?(rnd()-.5)*.14:0);}
+      renderKey(0,W/dpr);
+    }
+    vw=innerWidth; vh=innerHeight; od=Math.min(devicePixelRatio||1,vw>900?1.5:2);
+    const ow=Math.round(vw*od), oh=Math.round(vh*od);
+    if(ow!==oc.width||oh!==oc.height){oc.width=ow;oc.height=oh;box=null;}
+  }
+  const area=d=>G.f*d+d*d/G.k;
+  function depth(x){ // smooth-max of notch profiles → slightly blunted peaks, like a real cut
+    let a=0,b=-1e9;
+    for(let i=0;i<N;i++){const di=G.D[i]*prog[i];if(di<=0)continue;const v=Math.min(di,di-G.k*(Math.abs(x-G.C[i])-G.f/2));if(v>a){b=a;a=v;}else if(v>b)b=v;}
+    const h=G.pk-(a-b); return h>0?a+h*h/(4*G.pk):a;
+  }
+  function edge(x){if(x<G.xS1)return 1.14*hw;if(x<G.xT0)return hw-depth(x);if(x<=G.xTip)return hw-(hw-G.tipH)*(x-G.xT0)/(G.xTip-G.xT0);return G.tipH;}
+  function groove(x,y){ // milled ward channel with sloped walls and a raked end
+    const g=G; if(y<=g.g0||y>=g.g1) return 0; const xa=g.xS1+.2*hw; if(x<=xa) return 0;
+    const xe=g.xT0+.8*hw-(.5*hw)*(y-g.g0)/(g.g1-g.g0); if(x>=xe) return 0;
+    return g.gd*sst(0,g.gw,Math.min(y-g.g0,g.g1-y,x-xa,(xe-x)*.6));
+  }
+
+  /* per-pixel height field → normals → reflected studio light */
+  function renderKey(xa,xb){
+    const s=dpr, W=rail.width, H=rail.height, g=G, hH=1.55*hw, rc=.45*hw, Rp=.28*hw*s;
+    const c0=Math.max(0,Math.floor(xa*s)-2), c1=Math.min(W,Math.ceil(xb*s)+2), e0=Math.max(0,c0-1), e1=Math.min(W,c1+1);
+    for(let col=e0;col<e1;col++){
+      const x=(col+.5)/s; if(x<g.xS0) continue;
+      const e=edge(x), sl=(edge(x+.3)-edge(x-.3))/.6, cut=x>=g.xS1&&x<g.xT0&&hw-e>.003*hw;
+      E[col]=e*s; CA[col]=1/Math.sqrt(1+sl*sl); CUT[col]=cut?1:0; RR[col]=Math.max(1.2,(cut?.025:.05)*hw*s);
+    }
+    for(let col=e0;col<e1;col++){
+      const x=(col+.5)/s, head=x<g.xS0;
+      for(let row=0;row<H;row++){
+        const i=row*W+col, y=(row+.5)/s; let d, r;
+        if(head){
+          d=(x>g.xS0-rc&&y>hH-rc)?rc-Math.hypot(x-(g.xS0-rc),y-(hH-rc)):Math.min(g.xS0-x,hH-y); d*=s; r=Rp;
+        } else {
+          r=RR[col]; d=(E[col]-(row+.5))*CA[col];
+          if(x<g.xS1&&y>hw) d=Math.min(d,(g.xS1-x)*s);
+          d=Math.min(d,(g.xTip-x)*s);
+        }
+        AL[i]=clamp(d+.5,0,1);
+        const dd=clamp(d,0,r);
+        HB[i]=-(r-Math.sqrt(Math.max(0,r*r-(r-dd)*(r-dd))))-(head?0:groove(x,y)*s);
+      }
+    }
+    const data=img.data, cx=rail.clientWidth*.45, cy=-4*hw, Dz=1100;
+    for(let col=c0;col<c1;col++){
+      const x=(col+.5)/s, head=x<g.xS0, cl=col>0?-1:0, cr=col<W-1?1:0;
+      const ao=head?1:.45+.55*sst(0,.4*hw,x-g.xS0);
+      for(let row=0;row<H;row++){
+        const i=row*W+col, o=i*4, a=AL[i];
+        if(a<=0){data[o+3]=0;continue;}
+        const y=(row+.5)/s;
+        const hx=(HB[i+cr]-HB[i+cl])*.5, hy=((row<H-1?HB[i+W]:HB[i])-(row>0?HB[i-W]:HB[i]))*.5;
+        let vx=cx-x, vy=cy-y, vz=Dz; const vl=Math.hypot(vx,vy,vz); vx/=vl; vy/=vl; vz/=vl;
+        let nx=-hx, ny=-hy+(head?-.05:-.28+BRN[row]), nz=1; const nl=Math.hypot(nx,ny,nz); nx/=nl; ny/=nl; nz/=nl;
+        const ndv=nx*vx+ny*vy+nz*vz, e=env(2*ndv*nx-vx,2*ndv*ny-vy,2*ndv*nz-vz);
+        const occ=(.2+.8*sst(0,.3*hw,y))*ao;
+        let R,Gc,B;
+        if(head){
+          const fr=.04+.96*Math.pow(1-ndv,5), sp=e*fr*.45, df=.35+.65*clamp(-ny*.6+nz*.8,0,1), gr=1+(((col*7+row*13)%5)-2)*.02;
+          R=(PLASTIC[0]*df+sp)*gr; Gc=(PLASTIC[1]*df+sp)*gr; B=(PLASTIC[2]*df+sp)*gr;
+        } else {
+          let m=0; if(CUT[col]){const dd=(E[col]-(row+.5))*CA[col]; m=clamp(1-dd/(RR[col]+1.5),0,1)*.7;}
+          R=(NICKEL[0]+(BRASS[0]-NICKEL[0])*m)*e; Gc=(NICKEL[1]+(BRASS[1]-NICKEL[1])*m)*e; B=(NICKEL[2]+(BRASS[2]-NICKEL[2])*m)*e;
+        }
+        data[o]=tone(R*occ); data[o+1]=tone(Gc*occ); data[o+2]=tone(B*occ); data[o+3]=a*255;
+      }
+    }
+    kc.putImageData(img,0,0,c0,0,c1-c0,H);
+  }
+
+  /* ---- chips: small brass fragments + dust, tumbling under gravity; occasional helical curls ---- */
+  const F=[], CU=[], FMAX=170;
+  const SHP=[...Array(8)].map(()=>{const p=new Path2D(),m=4+(rnd()*3|0);for(let i=0;i<m;i++){const a=(i+rnd()*.6)/m*TAU,r=.55+rnd()*.5,x=Math.cos(a)*r,y=Math.sin(a)*r*(.5+rnd()*.5);i?p.lineTo(x,y):p.moveTo(x,y);}p.closePath();return p;});
+  let bx0,by0,bx1,by1;
+  const grow=(x,y,m)=>{if(x-m<bx0)bx0=x-m;if(y-m<by0)by0=y-m;if(x+m>bx1)bx1=x+m;if(y+m>by1)by1=y+m;};
+  function spawn(i,n,rx,ry){
+    const d=G.D[i]*prog[i], half=G.f/2+d/G.k, sc=hw/28;
+    for(let k=0;k<n;k++){
+      const x=G.C[i]+(rnd()*2-1)*half*.8, q=rnd(), dust=q<.35, big=q>.93;
+      if(F.length>=FMAX) F.shift();
+      F.push({x:rx+x,y:ry+edge(x)-rnd()*1.5,vx:(rnd()-.45)*(dust?90:150),vy:-30+rnd()*130,t:rnd()*TAU,p:rnd()*TAU,
+        wt:(8+rnd()*34)*(rnd()<.5?-1:1),wp:(rnd()-.5)*10,s:(dust?.45+rnd()*.4:big?2.8+rnd()*1.6:1+rnd()*1.5)*sc,
+        sh:rnd()*8|0,al:rnd()<.88?BRASS:NICKEL,dust,life:0});
+    }
+  }
+  function newCurl(i){const long=rnd()<.25;return{i,att:true,ax:G.C[i]+G.f*.3,x:0,y:0,turns:.1,max:long?3.5+rnd()*2.5:1.2+rnd()*1.8,
+    r:(.05+rnd()*.05)*hw,pitch:(.035+rnd()*.04)*hw,cone:.1+rnd()*.3,w:Math.max(.7,(.025+rnd()*.02)*hw),
+    rx:(rnd()-.5)*.9,ry:rnd()*TAU,rz:(rnd()-.5)*1.1,pv:0,vx:0,vy:0,wx:0,wy:0,wz:0,idle:0,life:0};}
+  function rot(c,x,y,z,o){const cx=Math.cos(c.rx),sx=Math.sin(c.rx),cy=Math.cos(c.ry),sy=Math.sin(c.ry),cz=Math.cos(c.rz),sz=Math.sin(c.rz);
+    const x1=x*cy+z*sy,z1=z*cy-x*sy,y2=y*cx-z1*sx,z2=y*sx+z1*cx;o[0]=x1*cz-y2*sz;o[1]=x1*sz+y2*cz;o[2]=z2;return o;}
+  function detach(c){if(!c.att)return;c.att=false;cur[c.i]=null;const pv=c.pitch*c.turns/2,o=rot(c,0,pv,0,[0,0,0]);
+    c.x+=o[0];c.y+=o[1];c.pv=pv;c.vx=(rnd()-.4)*90;c.vy=rnd()*60;c.wx=(rnd()-.5)*8;c.wy=(rnd()-.5)*10;c.wz=(rnd()-.5)*6;c.life=0;}
+  const PT=new Float32Array(6*200), O=[0,0,0];
+  function drawCurl(c){
+    const S=c.turns*TAU; if(S<.3) return;
+    const segN=Math.min(190,Math.max(2,Math.ceil(S/(TAU/20)))), ds=S/segN;
+    for(let k=0;k<=segN;k++){const s=k*ds,R=c.r*(1+c.cone*s/(TAU*c.max)),cs=Math.cos(s),sn=Math.sin(s),a=k*6;
+      rot(c,R*cs-c.r,c.pitch*s/TAU-c.pv,R*sn,O);PT[a]=c.x+O[0];PT[a+1]=c.y+O[1];PT[a+2]=O[2];
+      rot(c,cs,0,sn,O);PT[a+3]=O[0];PT[a+4]=O[1];PT[a+5]=O[2];}
+    for(let pass=0;pass<2;pass++) for(let k=0;k<segN;k++){
+      const a=k*6,b=a+6; if((PT[a+2]+PT[b+2]>=0)!==(pass===1)) continue;
+      const s=(k+.5)*ds, tp=Math.max(.3,Math.min(1,s/1.2,(S-s)/1.5)), nz=PT[a+5];
+      const al=pass?BRASS:[BRASS[0]*.55,BRASS[1]*.55,BRASS[2]*.55];
+      ox.strokeStyle=metal(PT[a+3],PT[a+4],nz,al);
+      ox.lineWidth=Math.max(.5,c.w*(.3+.7*Math.abs(nz))*tp);
+      ox.beginPath(); ox.moveTo(PT[a],PT[a+1]); ox.lineTo(PT[b],PT[b+1]); ox.stroke();
+      grow(PT[a],PT[a+1],c.w+3);
+    }
+  }
+
+  let rowState=-1;
+  function rowsUpdate(){const k=rows.filter((_,i)=>P>=(i+1)/rows.length-.005).length;
+    if(k!==rowState){rowState=k;rows.forEach((r,i)=>r.classList.toggle('cut-done',i<k));}}
+  function measure(){const lr=rows[rows.length-1];if(!lr){sEnd=800;return;}const b=lr.getBoundingClientRect();
+    sEnd=Math.max(300,b.top+scrollY+b.height/2-innerHeight*.55);target=clamp(scrollY/sEnd,0,1);}
+
+  let run=false,last=0;
+  function kick(){if(!run){run=true;last=performance.now();requestAnimationFrame(frame);}}
+  function frame(now){
+    const dt=Math.min(.05,Math.max(.001,(now-last)/1000)); last=now;
+    const hs=clamp(scrollY/140,0,1); if(Math.abs(hs-hsPrev)>.001){hdr.style.setProperty('--hs',hs.toFixed(3));hsPrev=hs;}
+    P=reduce?target:P+(target-P)*Math.min(1,dt*7); if(Math.abs(target-P)<1e-4) P=target;
+    const rc=rail.getBoundingClientRect(), rx=rc.left, ry=rc.top;
+    let xa=1e9, xb=-1e9;
+    for(let i=0;i<N;i++){
+      const v=clamp((P*(N-1+OVL)-i)/OVL,0,1); if(v===prog[i]) continue;
+      const Df=G.D[i], dA=area(Df*v)-area(Df*prog[i]); prog[i]=v;
+      const span=G.f/2+Df/G.k+G.pk+2; xa=Math.min(xa,G.C[i]-span); xb=Math.max(xb,G.C[i]+span);
+      if(dA>0&&!reduce){
+        acc[i]=Math.min(20,acc[i]+dA/(hw*hw)*150); const n=Math.min(8,acc[i]|0); acc[i]-=n; if(n) spawn(i,n,rx,ry);
+        let c=cur[i];
+        if(c){const g=dA/area(Df)*c.max*1.1;c.turns+=g;c.ry+=g*TAU;c.idle=0;if(c.turns>=c.max){detach(c);rolled[i]=rnd()<.25?0:1;}}
+        else if(!rolled[i]){rolled[i]=1;if(rnd()<.55&&CU.length<6){c=newCurl(i);cur[i]=c;CU.push(c);}}
+      } else if(dA<0){ if(cur[i]) detach(cur[i]); if(v===0) rolled[i]=0; }
+      if(v>=1&&cur[i]) detach(cur[i]);
+    }
+    if(xb>xa){renderKey(xa,xb);rowsUpdate();}
+
+    if(box){ox.setTransform(1,0,0,1,0,0);ox.clearRect(box[0],box[1],box[2]-box[0],box[3]-box[1]);box=null;}
+    if(F.length||CU.length){
+      bx0=by0=1e9;bx1=by1=-1e9;
+      for(let j=F.length-1;j>=0;j--){
+        const f=F[j]; f.life+=dt;
+        if(f.y>vh+20||f.life>3){F.splice(j,1);continue;}
+        f.vy+=2400*dt; const dr=Math.exp(-.9*dt); f.vx*=dr; f.vy*=dr;
+        f.x+=f.vx*dt; f.y+=f.vy*dt; f.t+=f.wt*dt; f.p+=f.wp*dt;
+        const st=Math.sin(f.t), nx=st*Math.cos(f.p), ny=st*Math.sin(f.p), nz=Math.cos(f.t);
+        ox.fillStyle=metal(nx,ny,nz,f.al);
+        if(f.dust){ox.setTransform(od,0,0,od,0,0);ox.fillRect(f.x-f.s/2,f.y-f.s/2,f.s,f.s);}
+        else{const fz=Math.max(.15,Math.abs(nz)), s=f.s*od, cp=Math.cos(f.p), sp=Math.sin(f.p);
+          ox.setTransform(cp*fz*s,sp*fz*s,-sp*s,cp*s,f.x*od,f.y*od); ox.fill(SHP[f.sh]);}
+        grow(f.x,f.y,f.s+2);
+      }
+      ox.setTransform(od,0,0,od,0,0); ox.lineCap='round';
+      for(let j=CU.length-1;j>=0;j--){
+        const c=CU[j];
+        if(c.att){c.x=rx+c.ax;c.y=ry+edge(c.ax);c.idle+=dt;if(c.idle>.35)detach(c);}
+        else{c.life+=dt;c.vy+=2400*dt;const dr=Math.exp(-.7*dt);c.vx*=dr;c.vy*=dr;c.x+=c.vx*dt;c.y+=c.vy*dt;
+          c.rx+=c.wx*dt;c.ry+=c.wy*dt;c.rz+=c.wz*dt;if(c.y>vh+60||c.life>3){CU.splice(j,1);continue;}}
+        drawCurl(c);
+      }
+      if(bx1>bx0) box=[Math.max(0,Math.floor(bx0*od)),Math.max(0,Math.floor(by0*od)),Math.min(oc.width,Math.ceil(bx1*od)),Math.min(oc.height,Math.ceil(by1*od))];
+    }
+    if(P!==target||F.length||CU.length) requestAnimationFrame(frame); else run=false;
+  }
+
+  addEventListener('scroll',()=>{target=clamp(scrollY/sEnd,0,1);kick();},{passive:true});
+  addEventListener('resize',()=>{sizeAll();measure();kick();});
+  measure(); P=target;
+  for(let i=0;i<N;i++){prog[i]=clamp((P*(N-1+OVL)-i)/OVL,0,1);rolled[i]=prog[i]>0?1:0;}
+  sizeAll(); rowsUpdate(); hsPrev=clamp(scrollY/140,0,1); hdr.style.setProperty('--hs',hsPrev.toFixed(3));
+  setTimeout(()=>rail.classList.add('in'),120);
+  addEventListener('load',measure); if(document.fonts) document.fonts.ready.then(measure);
+  window.__key={get P(){return P;},get particles(){return F.length+CU.length;}};
+})();
+</script>
+
+<!-- ===== CTA lock animation: three.js is fetched in the background AFTER the page loads, and skipped on slow/data-saver connections ===== -->
+<script>
+(function(){
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.playLock=function(kind,done){ if(reduce||!window.__lock){ done&&done(); return; } window.__lock(kind,done); };
+  // Call links: animation plays alongside the call (never delays dialing)
+  document.querySelectorAll('a[href^="tel:"]').forEach(a=>a.addEventListener('click',()=>window.playLock('call')));
+  if(reduce) return;
+  const cn=navigator.connection; if(cn&&(cn.saveData||/2g|3g/.test(cn.effectiveType||''))) return;
+  const go=()=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.async=true;s.onload=initLock;document.head.appendChild(s);};
+  addEventListener('load',()=>{ if('requestIdleCallback' in window) requestIdleCallback(go,{timeout:6000}); else setTimeout(go,3000); });
+
+  function initLock(){
+  if(!window.THREE) return;
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const easeS=t=>-(Math.cos(Math.PI*t)-1)/2;
 
-  /* ---------- Brushed finish: seamless, every streak runs the full length of the grain ---------- */
-  const TX=(function(){
-    const S=1024, rows=new Float32Array(S);
-    for(let f=4;f<=512;f*=2){
+  /* Brushed finish (built on first use, not at page load) */
+  let TX=null;
+  function getTX(){ if(TX) return TX; TX=(function(){
+    const S=512, rows=new Float32Array(S);
+    for(let f=4;f<=256;f*=2){
       const pts=new Float32Array(f); for(let i=0;i<f;i++) pts[i]=Math.random()*2-1;
       const amp=f<32?Math.pow(f,-0.9):Math.pow(f,-0.2);
       for(let y=0;y<S;y++){const p=y/S*f,i=Math.floor(p),s=(1-Math.cos((p-i)*Math.PI))/2;rows[y]+=amp*(pts[i%f]*(1-s)+pts[(i+1)%f]*s);}
     }
-    for(let k=0;k<40;k++){rows[Math.random()*S|0]-=0.5+Math.random()*0.6;} // hairline scratches
+    for(let k=0;k<24;k++){rows[Math.random()*S|0]-=0.5+Math.random()*0.6;}
     let mn=1e9,mx=-1e9; for(const v of rows){mn=Math.min(mn,v);mx=Math.max(mx,v);}
     for(let y=0;y<S;y++) rows[y]=(rows[y]-mn)/(mx-mn);
     const mk=()=>{const c=document.createElement('canvas');c.width=c.height=S;return c;};
@@ -574,9 +787,8 @@
     cr.getContext('2d').putImageData(ir,0,0); cn.getContext('2d').putImageData(inn,0,0);
     const t=c=>{const x=new THREE.CanvasTexture(c);x.wrapS=x.wrapT=THREE.RepeatWrapping;x.repeat.set(0.5,1.3);x.anisotropy=16;return x;};
     return {rough:t(cr),normal:t(cn)};
-  })();
+  })(); return TX; }
 
-  /* ---------- Shared studio: thin light bars (crisp streaks, no flat blow-out) ---------- */
   function setup(r){r.setPixelRatio(Math.min(window.devicePixelRatio||1,2));r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=0.95;r.setClearColor(0x000000,0);}
   function studio(r,scene){
     const pm=new THREE.PMREMGenerator(r), env=new THREE.Scene(); env.background=new THREE.Color(0x000000);
@@ -592,7 +804,6 @@
     scene.add(a,b);
   }
 
-  /* ---------- Blade (fades to black toward the shoulder) ---------- */
   const K={T:0.1,TOP:0.34,BOT:-0.34,X0:-1.7,XS:0.08,XT:2.92,TIP:3.26,C:[0.5,0.9,1.3,1.7,2.1,2.5],D:[0.11,0.24,0.07,0.27,0.15,0.2]};
   const FULL=[1,1,1,1,1,1];
   function depthAt(p,x){let d=0;for(let i=0;i<6;i++){const de=K.D[i]*p[i];if(de<=0)continue;const v=Math.min(de,de+0.05-Math.abs(x-K.C[i]));if(v>d)d=v;}return d;}
@@ -612,11 +823,10 @@
     };
     return m;
   }
-  function keyMats(){return{
-    face:fade(new THREE.MeshPhysicalMaterial({color:0xc9a04e,metalness:1,roughness:0.42,roughnessMap:TX.rough,normalMap:TX.normal,normalScale:new THREE.Vector2(0.35,0.35),envMapIntensity:1.45})),
+  function keyMats(){const tx=getTX();return{
+    face:fade(new THREE.MeshPhysicalMaterial({color:0xc9a04e,metalness:1,roughness:0.42,roughnessMap:tx.rough,normalMap:tx.normal,normalScale:new THREE.Vector2(0.35,0.35),envMapIntensity:1.45})),
     edge:fade(new THREE.MeshPhysicalMaterial({color:0xf0cf85,metalness:1,roughness:0.14,envMapIntensity:1.6})),
-    groove:fade(new THREE.MeshPhysicalMaterial({color:0x3a2a10,metalness:1,roughness:0.65,envMapIntensity:0.5})),
-    chip:new THREE.MeshPhysicalMaterial({color:0xf0cf85,metalness:1,roughness:0.2,envMapIntensity:1.5})
+    groove:fade(new THREE.MeshPhysicalMaterial({color:0x3a2a10,metalness:1,roughness:0.65,envMapIntensity:0.5}))
   };}
   function makeBlade(M,parent,p){
     const b=new THREE.Mesh(bladeGeo(p),[M.face,M.edge]); parent.add(b);
@@ -624,114 +834,13 @@
     parent.add(new THREE.Mesh(gg,M.groove)); return b;
   }
 
-  /* =================== HOME: blade cut on scroll =================== */
-  (function(){
-    const stage=document.getElementById('keyStage'), canvas=document.getElementById('keyCanvas');
-    let renderer; try{ renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }
-    catch(e){ document.documentElement.classList.add('no-webgl'); return; }
-    setup(renderer);
-    const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(26,1,0.1,100);
-    studio(renderer,scene);
-    const M=keyMats(), keyG=new THREE.Group(), inner=new THREE.Group(); inner.position.x=-1.25; keyG.add(inner); scene.add(keyG);
-    const prog=[0,0,0,0,0,0], blade=makeBlade(M,inner,prog), R=0.16;
-    function rebuild(){blade.geometry.dispose(); blade.geometry=bladeGeo(prog);}
-
-    // fluted carbide end mill
-    const cutG=new THREE.Group(); cutG.rotation.x=Math.PI/2; inner.add(cutG);
-    const cg=new THREE.CylinderGeometry(R,R,0.5,120,1), cp=cg.attributes.position;
-    for(let i=0;i<cp.count;i++){const x=cp.getX(i),z=cp.getZ(i),r=Math.hypot(x,z);if(r>0.01){const a=Math.atan2(z,x),k=0.84+0.16*Math.pow(Math.abs(Math.sin(a*2)),0.35);cp.setX(i,Math.cos(a)*r*k);cp.setZ(i,Math.sin(a)*r*k);}}
-    cg.computeVertexNormals();
-    const mill=new THREE.Mesh(cg,new THREE.MeshPhysicalMaterial({color:0x5f646b,metalness:1,roughness:0.3,envMapIntensity:1.4})); cutG.add(mill);
-    const shank=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,1.8,64),new THREE.MeshPhysicalMaterial({color:0xa9aeb5,metalness:1,roughness:0.2})); shank.position.y=-1.15; cutG.add(shank);
-    const cpos=new THREE.Vector3(K.C[0],K.TOP+1.2,0); cutG.position.copy(cpos); cutG.scale.setScalar(0.0001);
-
-    // brass shavings
-    const SH=280, sh=new THREE.InstancedMesh(new THREE.TetrahedronGeometry(0.022),M.chip,SH);
-    sh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); inner.add(sh);
-    const sp=new Float32Array(SH*3), sv=new Float32Array(SH*3), sl=new Float32Array(SH), sr=new Float32Array(SH*2); let si=0; const dm=new THREE.Object3D();
-    function spawn(x,y,n){for(let k=0;k<n;k++){const i=si++%SH,a=Math.random()*Math.PI;
-      sp[i*3]=x+(Math.random()-.5)*0.12; sp[i*3+1]=y; sp[i*3+2]=(Math.random()-.5)*K.T;
-      sv[i*3]=Math.cos(a)*(0.3+Math.random()*0.8); sv[i*3+1]=0.4+Math.random()*1.1; sv[i*3+2]=(Math.random()-.5)*1.4;
-      sl[i]=0.7+Math.random()*0.6; sr[i*2]=Math.random()*6; sr[i*2+1]=Math.random()*6;}}
-    function stepShavings(dt){for(let i=0;i<SH;i++){
-      if(sl[i]>0){sl[i]-=dt; sv[i*3+1]-=6*dt; sp[i*3]+=sv[i*3]*dt; sp[i*3+1]+=sv[i*3+1]*dt; sp[i*3+2]+=sv[i*3+2]*dt;
-        dm.position.set(sp[i*3],sp[i*3+1],sp[i*3+2]); dm.rotation.set(sr[i*2]+=dt*9,sr[i*2+1]+=dt*7,0);
-        dm.scale.setScalar(Math.max(0,Math.min(1,sl[i]*2))*(0.5+(i%5)*0.25));
-      } else dm.scale.setScalar(0);
-      dm.updateMatrix(); sh.setMatrixAt(i,dm.matrix);} sh.instanceMatrix.needsUpdate=true;}
-
-    const svc=document.getElementById('services'), rows=[...svc.querySelectorAll('.svc-row')];
-    let target=0, P=0;
-    function measure(){
-      const y=window.scrollY, vh=window.innerHeight;
-      const s0=svc.getBoundingClientRect().top+y-vh*0.75, lr=rows[rows.length-1].getBoundingClientRect();
-      const s1=lr.top+y+lr.height/2-vh*0.55;
-      target=clamp((y-s0)/Math.max(1,s1-s0),0,1);
-    }
-    addEventListener('scroll',measure,{passive:true});
-    function resize(){
-      const w=stage.clientWidth,h=stage.clientHeight; if(!w||!h) return;
-      renderer.setSize(w,h,false); camera.aspect=w/h; const wide=w>860;
-      camera.fov=wide?26:30; camera.position.set(0,0.3,wide?13.5:11);
-      if(wide) camera.setViewOffset(w,h,-w*0.25,0,w,h); else camera.clearViewOffset();
-      camera.updateProjectionMatrix(); camera.lookAt(0,0,0); measure();
-    }
-    addEventListener('resize',resize);
-    let mx=0,my=0,tx=0,ty=0;
-    if(!reduce) addEventListener('pointermove',e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;},{passive:true});
-    let visible=true; new IntersectionObserver(es=>{visible=es[0].isIntersecting;}).observe(document.getElementById('keyScroll'));
-
-    const h1=document.getElementById('hudLine1'), h2=document.getElementById('hudLine2'), hb=document.getElementById('hudBar'); let hudKey='';
-    function hud(active){
-      const done=prog.filter(v=>v>=1).length;
-      const l1=P<=0?'Blank &middot; Uncut':P>=1?'Cut complete &middot; <b>Ready</b>':'Milling space <b>'+String((active>=0?active:done)+1).padStart(2,'0')+'</b>';
-      const dep=active>=0?(K.D[active]*prog[active]*0.5).toFixed(3).slice(1):'.000';
-      const l2='Bitting <b>'+String(done).padStart(2,'0')+'</b> / 06 &nbsp; Depth <b>'+dep+'&Prime;</b>';
-      if(l1+l2!==hudKey){hudKey=l1+l2;h1.innerHTML=l1;h2.innerHTML=l2;}
-      hb.style.width=(P*100).toFixed(1)+'%';
-      rows.forEach((r,i)=>r.classList.toggle('cut-done',P>=(i+1)/rows.length-0.005));
-    }
-
-    measure(); P=target; for(let i=0;i<6;i++) prog[i]=clamp(P*6-i,0,1); rebuild(); resize();
-    let last=performance.now(), t=0;
-    function frame(now){
-      requestAnimationFrame(frame);
-      const dt=Math.min(0.05,(now-last)/1000); last=now;
-      if(!visible||document.hidden) return;
-      t+=dt; P+=(target-P)*Math.min(1,dt*5); if(Math.abs(target-P)<1e-4) P=target;
-      let changed=false, active=-1;
-      for(let i=0;i<6;i++){
-        const v=clamp(P*6-i,0,1);
-        if(v!==prog[i]){ if(v>prog[i]) spawn(K.C[i],K.TOP-K.D[i]*v,Math.min(10,Math.ceil((v-prog[i])*K.D[i]*260))); prog[i]=v; changed=true; }
-        if(v>0&&v<1) active=i;
-      }
-      if(changed) rebuild();
-      const running=P>0.001&&P<0.999;
-      if(active>=0) cpos.set(K.C[active],K.TOP-K.D[active]*prog[active]+R,0); else cpos.y=K.TOP+0.9;
-      cutG.position.lerp(cpos,Math.min(1,dt*14));
-      const sc=cutG.scale.x+((running?1:0.0001)-cutG.scale.x)*Math.min(1,dt*6);
-      cutG.scale.setScalar(sc); cutG.visible=sc>0.01;
-      mill.rotation.y+=dt*(active>=0?48:14);
-      stepShavings(dt);
-      tx+=(mx-tx)*Math.min(1,dt*3); ty+=(my-ty)*Math.min(1,dt*3);
-      const idle=reduce?0:1;
-      keyG.rotation.set(0.3-0.2*P+ty*0.05, -0.55+0.62*P+tx*0.08+Math.sin(t*0.45)*0.07*idle, 0.16-0.12*P);
-      keyG.position.y=Math.sin(t*0.9)*0.03*idle;
-      hud(active);
-      renderer.render(scene,camera);
-    }
-    requestAnimationFrame(frame);
-  })();
-
-  /* =================== CTA: insert the last 20% + turn, in a cutaway cylinder =================== */
   let LK=null;
   function buildLock(){
-    const cv=document.getElementById('lockCanvas');
+    const cv=document.getElementById('lockCanvas'), tx=getTX();
     let r; try{ r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true}); }catch(e){ return null; }
     setup(r); r.localClippingEnabled=true;
     const sc=new THREE.Scene(), cam=new THREE.PerspectiveCamera(30,1,0.1,100); studio(r,sc);
     const keep=[new THREE.Plane(new THREE.Vector3(0,0,-1),0)], away=[new THREE.Plane(new THREE.Vector3(0,0,1),0)];
-    // back faces of a clipped solid → flat "machined" section color (reads as a solid cut face)
     function capped(m,hex){ m.side=THREE.DoubleSide; m.clippingPlanes=keep;
       m.onBeforeCompile=s=>{ s.uniforms.capColor={value:new THREE.Color(hex)};
         s.fragmentShader='uniform vec3 capColor;\n'+s.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>\nif(!gl_FrontFacing) gl_FragColor=vec4(capColor,1.0);'); };
@@ -739,34 +848,29 @@
     const X1=0.1, LEN=3.35;
     const extX=sh=>{const g=new THREE.ExtrudeGeometry(sh,{depth:LEN,bevelEnabled:true,bevelThickness:0.015,bevelSize:0.015,bevelSegments:2,curveSegments:72});g.rotateY(Math.PI/2);g.translate(X1,0,0);return g;};
 
-    // housing (euro-style profile with pin tower)
     const HR=0.92,W=0.46,HY=1.75,yb=Math.sqrt(HR*HR-W*W),a0=Math.atan2(yb,W);
     const hs=new THREE.Shape(); hs.moveTo(W,yb); hs.lineTo(W,HY); hs.lineTo(-W,HY); hs.lineTo(-W,yb); hs.absarc(0,0,HR,Math.PI-a0,2*Math.PI+a0,false);
     const bore=new THREE.Path(); bore.absarc(0,0,0.625,0,Math.PI*2,true); hs.holes.push(bore);
     const hGeo=extX(hs);
-    sc.add(new THREE.Mesh(hGeo,capped(new THREE.MeshPhysicalMaterial({color:0xaab0b8,metalness:1,roughness:0.5,roughnessMap:TX.rough,normalMap:TX.normal,normalScale:new THREE.Vector2(0.5,0.5),envMapIntensity:1.2}),0x1b1d21)));
+    sc.add(new THREE.Mesh(hGeo,capped(new THREE.MeshPhysicalMaterial({color:0xaab0b8,metalness:1,roughness:0.5,roughnessMap:tx.rough,normalMap:tx.normal,normalScale:new THREE.Vector2(0.5,0.5),envMapIntensity:1.2}),0x1b1d21)));
 
-    // plug with keyway
     const ps=new THREE.Shape(); ps.absarc(0,0,0.58,0,Math.PI*2,false);
     const kw=new THREE.Path(); kw.moveTo(-0.085,-0.4); kw.lineTo(-0.085,0.43); kw.lineTo(0.085,0.43); kw.lineTo(0.085,-0.4); kw.closePath(); ps.holes.push(kw);
     const plug=new THREE.Group(); sc.add(plug);
     const pGeo=extX(ps);
-    plug.add(new THREE.Mesh(pGeo,capped(new THREE.MeshPhysicalMaterial({color:0xc9a04e,metalness:1,roughness:0.45,roughnessMap:TX.rough,normalMap:TX.normal,normalScale:new THREE.Vector2(0.5,0.5),envMapIntensity:1.3}),0x3d2f15)));
+    plug.add(new THREE.Mesh(pGeo,capped(new THREE.MeshPhysicalMaterial({color:0xc9a04e,metalness:1,roughness:0.45,roughnessMap:tx.rough,normalMap:tx.normal,normalScale:new THREE.Vector2(0.5,0.5),envMapIntensity:1.3}),0x3d2f15)));
 
-    // minimal wireframe of the removed half
     const wm=new THREE.LineBasicMaterial({color:0xd9b25e,transparent:true,opacity:0.5,clippingPlanes:away});
     sc.add(new THREE.LineSegments(new THREE.EdgesGeometry(hGeo,25),wm));
     plug.add(new THREE.LineSegments(new THREE.EdgesGeometry(pGeo,25),wm));
     const guide=(rad,angles)=>{const v=[];angles.forEach(d=>{const a=d*Math.PI/180,y=rad*Math.cos(a),z=rad*Math.sin(a);v.push(X1,y,z,X1+LEN,y,z);});const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));return new THREE.LineSegments(g,wm);};
     sc.add(guide(HR,[50,80,110,140,170])); plug.add(guide(0.58,[40,70,100,130,160]));
-    // section outline on the cut plane
     const secM=new THREE.LineBasicMaterial({color:0xe6b95c,transparent:true,opacity:0.8});
     const rect=(x0,y0,x1,y1)=>[x0,y0,.002,x1,y0,.002, x1,y0,.002,x1,y1,.002, x1,y1,.002,x0,y1,.002, x0,y1,.002,x0,y0,.002];
     const segs=v=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));return g;};
     sc.add(new THREE.LineSegments(segs([...rect(X1,0.625,X1+LEN,HY),...rect(X1,-HR,X1+LEN,-0.625)]),secM));
     const plugSecM=secM.clone(); plug.add(new THREE.LineSegments(segs([...rect(X1,0.43,X1+LEN,0.58),...rect(X1,-0.58,X1+LEN,-0.4)]),plugSecM));
 
-    // pin chambers + pin stacks
     const slotM=new THREE.MeshBasicMaterial({color:0x060708});
     const pinBrass=new THREE.MeshPhysicalMaterial({color:0xd8b060,metalness:1,roughness:0.22,envMapIntensity:1.5});
     const pinSteel=new THREE.MeshPhysicalMaterial({color:0xc4c9cf,metalness:1,roughness:0.2,envMapIntensity:1.4});
@@ -786,7 +890,6 @@
       return {cx,L,kp,dp,spr,y:0,v:0};
     });
 
-    // the same cut key
     const key=new THREE.Group(); plug.add(key); makeBlade(keyMats(),key,FULL);
     const FLOOR=0.04, OFF0=-0.72;
     function surf(xl){ if(xl>K.TIP||xl<K.X0) return FLOOR; if(xl>K.XT) return Math.max(FLOOR,0.05+(K.TOP-0.05)*(K.TIP-xl)/(K.TIP-K.XT)); return K.TOP-depthAt(FULL,xl); }
@@ -808,9 +911,9 @@
     return {reset,resize,step,playing:false};
   }
 
-  window.playLock=function(kind,done){
+  window.__lock=function(kind,done){
     const ov=document.getElementById('lockOverlay');
-    if(reduce||!ov){ done&&done(); return; }
+    if(!ov){ done&&done(); return; }
     if(!LK) LK=buildLock();
     if(!LK){ done&&done(); return; }
     if(LK.playing) return;
@@ -822,13 +925,12 @@
     ov.onclick=finish;
     (function loop(now){
       if(finished) return;
-      const t=window.__lockSeek!=null?window.__lockSeek:(now-t0)/1000, dt=Math.min(0.05,Math.max(0,(now-last)/1000)); last=now;
+      const t=(now-t0)/1000, dt=Math.min(0.05,Math.max(0,(now-last)/1000)); last=now;
       LK.step(t,dt);
       if(t>=3.0) finish(); else requestAnimationFrame(loop);
     })(t0);
   };
-  // Call links: animation plays alongside the call (never delays dialing)
-  document.querySelectorAll('a[href^="tel:"]').forEach(a=>a.addEventListener('click',()=>window.playLock('call')));
+  }
 })();
 </script>
 </body>
