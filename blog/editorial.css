@@ -1,0 +1,23 @@
+/* Shared visual refresh; article copy is retained. */
+:root{color-scheme:dark;--bg:#000;--bg-elev:#101213;--line:#303436;--text:#f1f2ef;--text-dim:#a3aaae;--accent:#e3e6e5}
+body{font-family:Arial,Helvetica,sans-serif;line-height:1.85}
+h1,h2,h3,.brand{font-family:Arial,Helvetica,sans-serif;text-transform:none;letter-spacing:-.045em;font-weight:500}
+.container,.header-inner{max-width:920px}
+header{padding:28px 0;margin-bottom:74px;background:#000}
+.brand-text{font-size:16px;letter-spacing:-.04em;font-weight:600;line-height:1.3}
+.back-link{padding:12px 0 12px 20px;white-space:nowrap}
+h1.post-title{font-size:clamp(38px,5.5vw,66px);line-height:1.04;margin:0 0 42px}
+.post-meta{font-size:10px;letter-spacing:.14em;margin-bottom:20px}
+article{max-width:760px;margin:auto}
+article p{color:#bec3c5;line-height:1.9;font-size:16px}
+article h2{font-size:28px;line-height:1.25;margin-top:46px;color:#f1f2ef}
+.post-list li{padding:34px 0}
+.post-list h2{font-family:Arial,Helvetica,sans-serif;font-weight:500;font-size:28px;letter-spacing:-.04em;line-height:1.2;margin-bottom:14px}
+.post-list a:hover h2{color:#adb5ba}
+.post-list p{font-size:14px}
+.cta{padding:34px;text-align:left;border:1px solid var(--line)}
+.cta p{font-family:Arial,Helvetica,sans-serif!important;text-transform:none!important;font-weight:500!important;letter-spacing:-.02em}
+.cta a{font-family:Arial,Helvetica,sans-serif;background:#edf0ec;color:#111;font-size:13px;border-radius:2px}
+a:focus-visible{outline:2px solid #fff;outline-offset:5px}
+footer{font-size:11px;padding:32px 0}
+@media(max-width:600px){header{margin-bottom:44px}.header-inner{gap:18px}.brand-text{font-size:14px;max-width:150px}.back-link{font-size:11px}.container,.header-inner{padding-inline:20px}article p{font-size:15px}.post-list h2{font-size:25px}.cta{padding:24px}h1.post-title{font-size:38px}}
